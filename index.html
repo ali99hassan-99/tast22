@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استمارة توطين رواتب</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+        .form-container button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>استمارة توطين رواتب</h1>
+        <form id="word-form">
+            <div class="mb-3">
+                <label for="fullName" class="form-label">الاسم الرباعي</label>
+                <input type="text" id="fullName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="motherName" class="form-label">اسم الأم الثلاثي</label>
+                <input type="text" id="motherName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="idNumber" class="form-label">رقم الهوية</label>
+                <input type="text" id="idNumber" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="idIssuer" class="form-label">جهة الإصدار</label>
+                <input type="text" id="idIssuer" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="issueDate" class="form-label">تاريخ الإصدار</label>
+                <input type="date" id="issueDate" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">عنوان السكن الحالي</label>
+                <input type="text" id="address" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">رقم الهاتف</label>
+                <input type="text" id="phone" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">تنزيل ملف Word</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.0.1/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.28.0/docxtemplater.min.js"></script>
+    <script>
+        document.getElementById('word-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                motherName: document.getElementById('motherName').value,
+                idNumber: document.getElementById('idNumber').value,
+                idIssuer: document.getElementById('idIssuer').value,
+                issueDate: document.getElementById('issueDate').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value
+            };
+
+            // تحميل قالب Word
+            const response = await fetch('template.docx');
+            const templateBytes = await response.arrayBuffer();
+
+            // إعداد PizZip و Docxtemplater
+            const zip = new PizZip(templateBytes);
+            const doc = new window.docxtemplater(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+            });
+
+            // استبدال البيانات في القالب
+            doc.setData(formData);
+
+            try {
+                doc.render(); // معالجة التغييرات
+                const out = doc.getZip().generate({
+                    type: 'blob',
+                    mimeType:
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                });
+
+                // تنزيل الملف
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(out);
+                link.download = 'استمارة_مكتملة.docx';
+                link.click();
+            } catch (error) {
+                console.error('Error generating document:', error);
+                alert('حدث خطأ أثناء معالجة الملف.');
+            }
+        });
+    </script>
+</body>
+</html>
